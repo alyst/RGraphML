@@ -1,0 +1,11 @@
+Package: RGraphML
+Type: Package
+Title: GraphML read/write support
+Version: 0.1
+Date: 2013-01-30
+Author: Alexey Stukalov
+Maintainer: Alexey Stukalov <astukalov@cemm.oeaw.ac.at>
+Description: Converts graph defined by nodes and edges data.frame into GraphML format.
+License: BSD (TODO)
+Depends: Rcpp (>= 0.10.2)
+LinkingTo: Rcpp
