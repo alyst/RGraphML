@@ -262,7 +262,7 @@ void Graph::read_nodes()
     for ( int i = 0; i < nodes.nrows(); i++ ) {
         Node node;
         node.id = nodeIds[ i ];
-        if ( parentIds && !(parentIds[i] == NA_STRING) ) node.parentId = parentIds[i];
+        if ( i < parentIds.size() && !(parentIds[i] == NA_STRING) ) node.parentId = parentIds[i];
         node.rowIx = i;
         node_map_t::iterator nIt = nodeMap.find( node.id );
         if ( nIt == nodeMap.end() ) {
@@ -399,12 +399,13 @@ void Graph::write_edges(
 //✬
 //✬ @param str input character vector
 //✬ @return characters in each element of the vector
+//* @TODO: fix to use proper NA for parentIdCol
 // [[Rcpp::export]]
 std::string DataFrameToGraphML(
     const Rcpp::DataFrame&  nodes,
     const Rcpp::DataFrame&  edges,
     const std::string&      nodeIdCol = "id",
-    const std::string&      parentIdCol = "parent",
+    const std::string&      parentIdCol = "NA",
     const std::string&      sourceCol = "source",
     const std::string&      targetCol = "target",
     const Rcpp::CharacterVector& nodeAttrs = R_NilValue,
@@ -412,7 +413,8 @@ std::string DataFrameToGraphML(
     bool                    isDirected = false
 ){
     Rcpp::Rcerr << "Initializing GraphML export...\n";
-    Graph graph( nodes, edges, nodeIdCol, parentIdCol,
+    Graph graph( nodes, edges, nodeIdCol,
+                 parentIdCol == "NA" ? std::string() : parentIdCol,
                  sourceCol, targetCol,
                  nodeAttrs, edgeAttrs,
                  isDirected );
