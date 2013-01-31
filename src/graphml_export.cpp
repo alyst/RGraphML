@@ -408,8 +408,8 @@ std::string DataFrameToGraphML(
     const std::string&      parentIdCol = "NA",
     const std::string&      sourceCol = "source",
     const std::string&      targetCol = "target",
-    const Rcpp::CharacterVector& nodeAttrs = R_NilValue,
-    const Rcpp::CharacterVector& edgeAttrs = R_NilValue,
+    const Rcpp::CharacterVector& nodeAttrs = Rcpp::CharacterVector::create(),
+    const Rcpp::CharacterVector& edgeAttrs = Rcpp::CharacterVector::create(),
     bool                    isDirected = false
 ){
     Rcpp::Rcerr << "Initializing GraphML export...\n";
