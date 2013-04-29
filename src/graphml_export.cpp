@@ -8,6 +8,13 @@
 //#define DYNLOAD_DEBUG
 #endif
 
+#define THROW_EXCEPTION( exp, msg ) \
+{ \
+    std::ostringstream err; \
+    err << msg; \
+    throw std::invalid_argument( err.str() ); \
+}
+
 std::string r_to_graphml_type( int rtype )
 {
     switch ( rtype ) {
@@ -15,11 +22,7 @@ std::string r_to_graphml_type( int rtype )
     case INTSXP:  return "integer";
     case LGLSXP:  return "boolean";
     case REALSXP: return "double";
-    default: {
-        std::ostringstream err;
-        err << "RTYPE " << rtype << " is not supported by RGraphML";
-        throw std::invalid_argument( err.str() );
-    }
+    default: THROW_EXCEPTION( std::invalid_argument, "RTYPE " << rtype << " is not supported by RGraphML" );
     }
 }
 
@@ -33,11 +36,7 @@ bool r_is_na( int rtype, Rcpp::GenericVector::const_Proxy value )
     case INTSXP:  return Rcpp::traits::is_na<INTSXP>( Rcpp::as<int>( value ) );
     case LGLSXP:  return Rcpp::traits::is_na<LGLSXP>( Rcpp::as<bool>( value ) );
     case REALSXP: return Rcpp::traits::is_na<REALSXP>( Rcpp::as<double>( value ) );
-    default: {
-        std::ostringstream err;
-        err << "Don't know how to is.na(): RTYPE=" << rtype;
-        throw std::invalid_argument( err.str() );
-        }
+    default: THROW_EXCEPTION( std::invalid_argument, "Don't know how to is.na(): RTYPE=" << rtype );
     }
 }
 
@@ -94,9 +93,7 @@ struct Attribute {
                 out << Rcpp::as<double>( values[ix] );
                 break;
             default:
-                std::ostringstream err;
-                err << "RTYPE " << rtype << " is not supported by RGraphML";
-                throw std::invalid_argument( err.str() );
+                THROW_EXCEPTION( std::invalid_argument, "RTYPE " << rtype << " is not supported by RGraphML" );
             }
             out << "</data>\n";
         }
@@ -269,9 +266,9 @@ void Graph::read_nodes()
             nodeMap.insert( nIt, std::make_pair( node.id, node ) );
         }
         else {
-            std::ostringstream err;
-            err << "Duplicate node '" << node.id << "' at row " << node.rowIx;
-            throw new std::runtime_error( err.str() );
+            THROW_EXCEPTION( std::runtime_error,
+                             "Duplicate node '" << node.id
+                             << "' at row " << node.rowIx );
         }
         parentMap.insert( std::make_pair( node.parentId, node.id ) );
     }
@@ -292,10 +289,9 @@ void Graph::read_edges()
             edgeMap.insert( eIt, std::make_pair( edgeId, edge ) );
         }
         else {
-            std::ostringstream err;
-            err << "Duplicate edge '" << edge.sourceId << "'-'" << edge.targetId << "'"
-                << " at row " << edge.rowIx;
-            throw new std::runtime_error( err.str() );
+            THROW_EXCEPTION( std::runtime_error,
+                             "Duplicate edge '" << edge.sourceId << "'-'" << edge.targetId << "'"
+                             << "' at row " << edge.rowIx );
         }
     }
 }
@@ -351,15 +347,13 @@ void Graph::write_node_subset(
     {
         node_map_t::const_iterator n2It = nodeMap.find( nIt->second );
         if ( n2It == nodeMap.end() ) {
-            std::ostringstream err;
-            err << "Internal error: node '" << nIt->second << "' not found in the nodes map";
-            throw std::runtime_error( err.str() );
+            THROW_EXCEPTION( std::runtime_error,
+                             "Internal error: node '" << nIt->second << "' not found in the nodes map" );
         }
         const Node& node = n2It->second;
         if ( processedNodes.count( node.id ) ) {
-            std::ostringstream err;
-            err << "Node '" << node.id << "' already written to GraphML. Potential parent-child circular reference";
-            throw std::runtime_error( err.str() );
+            THROW_EXCEPTION( std::runtime_error,
+                             "Node '" << node.id << "' already written to GraphML. Potential parent-child circular reference" );
         }
         processedNodes.insert( node.id );
         out << "  <node id=\"" << node.id << "\">\n";
