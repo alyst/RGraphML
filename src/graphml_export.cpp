@@ -233,6 +233,26 @@ Graph::Graph(
   , sourceCol( sourceCol ), targetCol( targetCol )
   , isDirected( isDirected )
 {
+    // check ID columns existence
+    column_map_t nodeCols = column_names( nodes );
+    if ( nodeCols.count( nodeIdCol ) == 0 ) {
+        THROW_EXCEPTION( std::invalid_argument, "Node ID column '" << nodeIdCol
+                         << "' not found in the nodes data.frame" );
+    }
+    if ( !parentIdCol.empty() && nodeCols.count( parentIdCol ) == 0 ) {
+        THROW_EXCEPTION( std::invalid_argument, "Parent node ID column '" << parentIdCol
+                         << "' not found in the nodes data.frame" );
+    }
+    column_map_t edgeCols = column_names( edges );
+    if ( edgeCols.count( sourceCol ) == 0 ) {
+        THROW_EXCEPTION( std::invalid_argument, "Edge source ID column '"
+                         << sourceCol << "' not found in the edges data.frame" );
+    }
+    if ( edgeCols.count( targetCol ) == 0 ) {
+        THROW_EXCEPTION( std::invalid_argument, "Edge target ID column '"
+                         << targetCol << "' not found in the edges data.frame" );
+    }
+
     // mapping of attributes from R to GraphML
     Rcpp::Rcerr << "Reading node attributes...\n";
     nodeAttrs = process_attributes( nodes, nodeAttrsExported, true );
