@@ -19,7 +19,7 @@ std::string r_to_graphml_type( int rtype )
 {
     switch ( rtype ) {
     case STRSXP:  return "string";
-    case INTSXP:  return "integer";
+    case INTSXP:  return "int";
     case LGLSXP:  return "boolean";
     case REALSXP: return "double";
     default: THROW_EXCEPTION( std::invalid_argument, "RTYPE " << rtype << " is not supported by RGraphML" );
