@@ -89,8 +89,13 @@ struct Attribute {
             case INTSXP:
                 out << Rcpp::as<int>( values[ix] );
                 break;
-            case REALSXP:
-                out << Rcpp::as<double>( values[ix] );
+            case REALSXP: {
+                double val = Rcpp::as<double>( values[ix] );
+                if ( std::isnan( val ) ) out << "NaN";
+                else if ( val == std::numeric_limits<double>::infinity() ) out << "Infinity";
+                else if ( val == -std::numeric_limits<double>::infinity() ) out << "-Infinity";
+                else out << val;
+            }
                 break;
             default:
                 THROW_EXCEPTION( std::invalid_argument, "RTYPE " << rtype << " is not supported by RGraphML" );
