@@ -414,10 +414,10 @@ void Graph::write_edges(
     }
 }
 
-//✬ The length of a string (in characters).
-//✬
-//✬ @param str input character vector
-//✬ @return characters in each element of the vector
+//??? The length of a string (in characters).
+//???
+//??? @param str input character vector
+//??? @return characters in each element of the vector
 //* @TODO: fix to use proper NA for parentIdCol
 // [[Rcpp::export]]
 std::string DataFrameToGraphML(
