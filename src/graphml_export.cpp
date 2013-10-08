@@ -181,6 +181,7 @@ struct Edge {
     node_id_t   sourceId;
     node_id_t   targetId;
     int         rowIx;
+    node_id_t   parentId;
 };
 
 struct Graph {
@@ -189,6 +190,8 @@ struct Graph {
     typedef std::multimap<node_id_t, node_id_t> parent_map_t;
     typedef std::pair<parent_map_t::const_iterator, parent_map_t::const_iterator> const_node_range_t;
     typedef std::map<edge_id_t, Edge> edge_map_t;
+    typedef std::multimap<node_id_t, edge_id_t> edge_parent_map_t;
+    typedef std::pair<edge_parent_map_t::const_iterator, edge_parent_map_t::const_iterator> const_edge_range_t;
 
     Rcpp::DataFrame  nodes;
     Rcpp::DataFrame  edges;
@@ -207,6 +210,7 @@ struct Graph {
     parent_map_t    parentMap;
 
     edge_map_t      edgeMap;
+    edge_parent_map_t   edgeParentMap;
 
     Graph(
         const Rcpp::DataFrame&  nodes,
@@ -228,8 +232,7 @@ struct Graph {
     node_id_t innermost_parent_node( const node_id_t& a, const node_id_t& b ) const;
 
     void write( std::ostringstream& out ) const;
-    void write_node_subset( std::ostringstream& out, const const_node_range_t& nodeSubset, node_set_t& processedNodes ) const;
-    void write_edges( std::ostringstream& out ) const;
+    void write_subgraph( std::ostringstream& out, const node_id_t& parentId, node_set_t& processedNodes ) const;
 };
 
 Graph::Graph(
@@ -356,6 +359,8 @@ void Graph::read_edges()
         edge.targetId = targetIds[ i ];
         edge.rowIx = i;
         edge_id_t edgeId( edge.sourceId, edge.targetId );
+        edge.parentId = innermost_parent_node( edge.sourceId, edge.targetId );
+
         edge_map_t::iterator eIt = edgeMap.find( edgeId );
         if ( eIt == edgeMap.end() ) {
             edgeMap.insert( eIt, std::make_pair( edgeId, edge ) );
@@ -365,6 +370,7 @@ void Graph::read_edges()
                              "Duplicate edge '" << edge.sourceId << "'-'" << edge.targetId << "'"
                              << "' at row " << edge.rowIx );
         }
+        edgeParentMap.insert( std::make_pair( edge.parentId, edgeId ) );
     }
 }
 
@@ -390,31 +396,27 @@ void Graph::write( std::ostringstream& out ) const
     }
 
     write_comment( out, "Graph" );
-    out << "<graph id=\"root\" edgedefault=\"" << ( isDirected ? "" : "un" ) << "directed\">\n";
-    Rcpp::Rcerr << "Generating nodes...\n";
-    write_comment( out, "Nodes" );
+    Rcpp::Rcerr << "Writing nodes and edges...\n";
     node_set_t processedNodes;
-    write_node_subset( out, parentMap.equal_range( std::string() ), processedNodes );
+    write_subgraph( out, node_id_t(), processedNodes );
     if ( processedNodes.size() < nodeMap.size() ) {
         Rcpp::Rcerr << "Only " << processedNodes.size() 
-                    << " of " << nodeMap.size() << " node(s) written\n";
+                    << " of " << nodeMap.size() << " node(s) have been written\n";
     }
     
-    if ( !edges.isNULL() && edges.nrows() > 0 ) {
-        Rcpp::Rcerr << "Generating edges...\n";
-        write_comment( out, "Edges" );
-        write_edges( out );
-    }
-    out << "</graph>\n";
-
     out << "</graphml>\n";
 }
 
-void Graph::write_node_subset(
+void Graph::write_subgraph(
     std::ostringstream&         out,
-    const const_node_range_t&   nodes,
+    const node_id_t&            parentId,
     node_set_t&                 processedNodes
 ) const {
+    out << "<graph id=\"" << ( parentId == node_id_t() ? parentId : "root" ) << "\""
+        << " edgedefault=\"" << ( isDirected ? "" : "un" ) << "directed\">\n";
+
+    write_comment( out, "Nodes" );
+    const_node_range_t nodes = parentMap.equal_range( parentId );
     for ( parent_map_t::const_iterator nIt = nodes.first; nIt != nodes.second; ++nIt )
     {
         node_map_t::const_iterator n2It = nodeMap.find( nIt->second );
@@ -433,24 +435,18 @@ void Graph::write_node_subset(
             nodeAttrs[attrIx].write_value( out, node.rowIx );
         }
         // check for subgraph
-        const_node_range_t subnodes = parentMap.equal_range( node.id );
-        if ( subnodes.first != subnodes.second ) {
-            Rcpp::Rcerr << "Writing subgraph of node \"" << node.id << "\"...";
-            out << "  <graph id=\"" << node.id << "_subgraph\" edgedefault=\"" 
-                << ( isDirected ? "" : "un" ) << "directed\">\n";
-            write_node_subset( out, subnodes, processedNodes );
-            out << "  </graph>\n";
+        if ( parentMap.count( node.id ) ) {
+            Rcpp::Rcerr << "Writing subgraph of node \"" << node.id << "\"...\n";
+            write_subgraph( out, node.id, processedNodes );
         }
         out << "  </node>\n";
     }
-}
 
-void Graph::write_edges(
-    std::ostringstream& out    
-) const {
-    for ( edge_map_t::const_iterator eit = edgeMap.begin(); eit != edgeMap.end(); ++eit )
+    write_comment( out, "Edges" );
+    const_edge_range_t edges = edgeParentMap.equal_range( parentId );
+    for ( edge_parent_map_t::const_iterator eIt = edges.first; eIt != edges.second; ++eIt )
     {
-        const Edge& edge = eit->second;
+        const Edge& edge = edgeMap.at( eIt->second );
         out << "  <edge id=\"" << edge.sourceId << "_" << edge.targetId << "\""
             << " source=\"" << edge.sourceId << "\""
             << " target=\"" << edge.targetId << "\">\n";
@@ -459,6 +455,7 @@ void Graph::write_edges(
         }
         out << "  </edge>\n";
     }
+    out << "</graph>\n";
 }
 
 //??? The length of a string (in characters).
