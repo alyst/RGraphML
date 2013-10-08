@@ -225,6 +225,7 @@ struct Graph {
     void read_edges();
 
     void set_nodes_parents( const node_id_deque_t& parentIds = node_id_deque_t( 1, node_id_t() ) );
+    node_id_t innermost_parent_node( const node_id_t& a, const node_id_t& b ) const;
 
     void write( std::ostringstream& out ) const;
     void write_node_subset( std::ostringstream& out, const const_node_range_t& nodeSubset, node_set_t& processedNodes ) const;
@@ -323,6 +324,26 @@ void Graph::set_nodes_parents( const node_id_deque_t& parentIds )
         subParentIds.front() = nIt->second;
         set_nodes_parents( subParentIds );
     }
+}
+
+// Finds the innermost common parent node of nodes a and b
+node_id_t Graph::innermost_parent_node(
+    const node_id_t& aId,
+    const node_id_t& bId
+) const {
+    const node_map_t::const_iterator aIt = nodeMap.find( aId );
+    const node_map_t::const_iterator bIt = nodeMap.find( bId );
+    if ( aIt == nodeMap.end() || bIt == nodeMap.end() ) return ( node_id_t() );
+
+    node_id_deque_t::const_reverse_iterator rAit = aIt->second.parentIds.rbegin();
+    node_id_deque_t::const_reverse_iterator rBit = bIt->second.parentIds.rbegin();
+    node_id_t res;
+    while ( rAit != aIt->second.parentIds.rend() && rBit != bIt->second.parentIds.rend() && *rAit == *rBit ) {
+        res = *rAit;
+        rAit++;
+        rBit++;
+    }
+    return ( res );
 }
 
 void Graph::read_edges()
