@@ -168,21 +168,21 @@ attr_map_t process_attributes(
 typedef std::string node_id_t;
 
 struct Node {
-    std::string id;
-    std::string parentId;
-    int         rowIx;
+    node_id_t           id;
+    node_id_t           parentId;
+    int                 rowIx;
 };
 
 typedef std::pair<node_id_t, node_id_t> edge_id_t;
 
 struct Edge {
-    std::string sourceId;
-    std::string targetId;
+    node_id_t   sourceId;
+    node_id_t   targetId;
     int         rowIx;
 };
 
 struct Graph {
-    typedef std::set<node_id_t> node_set_t; 
+    typedef std::set<node_id_t> node_set_t;
     typedef std::map<node_id_t, Node> node_map_t;
     typedef std::multimap<node_id_t, node_id_t> parent_map_t;
     typedef std::pair<parent_map_t::const_iterator, parent_map_t::const_iterator> const_node_range_t;
