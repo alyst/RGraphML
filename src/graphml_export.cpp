@@ -1,6 +1,7 @@
 #include <sstream>
 #include <set>
 #include <map>
+#include <deque>
 #include <Rcpp.h>
 #include <Rcpp/iostream/Rostream.h>
 
@@ -166,10 +167,11 @@ attr_map_t process_attributes(
 }
 
 typedef std::string node_id_t;
+typedef std::deque<node_id_t> node_id_deque_t;
 
 struct Node {
     node_id_t           id;
-    node_id_t           parentId;
+    node_id_deque_t     parentIds; // a list of parent node Ids, innermost are on top
     int                 rowIx;
 };
 
@@ -221,6 +223,8 @@ struct Graph {
     void init();
     void read_nodes();
     void read_edges();
+
+    void set_nodes_parents( const node_id_deque_t& parentIds = node_id_deque_t( 1, node_id_t() ) );
 
     void write( std::ostringstream& out ) const;
     void write_node_subset( std::ostringstream& out, const const_node_range_t& nodeSubset, node_set_t& processedNodes ) const;
@@ -275,6 +279,9 @@ void Graph::init()
     read_nodes();
     Rcpp::Rcerr << nodeMap.size() << " node(s) read\n";
 
+    Rcpp::Rcerr << "Setting node parents...\n";
+    set_nodes_parents();
+
     Rcpp::Rcerr << "Reading edges...\n";
     read_edges();
     Rcpp::Rcerr << edgeMap.size() << " edge(s) read\n";
@@ -288,7 +295,8 @@ void Graph::read_nodes()
     for ( int i = 0; i < nodes.nrows(); i++ ) {
         Node node;
         node.id = nodeIds[ i ];
-        if ( i < parentIds.size() && !(parentIds[i] == NA_STRING) ) node.parentId = parentIds[i];
+        node_id_t parentId;
+        if ( i < parentIds.size() && !(parentIds[i] == NA_STRING) ) parentId = parentIds[i];
         node.rowIx = i;
         node_map_t::iterator nIt = nodeMap.find( node.id );
         if ( nIt == nodeMap.end() ) {
@@ -299,7 +307,21 @@ void Graph::read_nodes()
                              "Duplicate node '" << node.id
                              << "' at row " << node.rowIx );
         }
-        parentMap.insert( std::make_pair( node.parentId, node.id ) );
+        parentMap.insert( std::make_pair( parentId, node.id ) );
+    }
+}
+
+/// sets the parentIds property of all the nodes that are the children of parentIds.front()
+void Graph::set_nodes_parents( const node_id_deque_t& parentIds )
+{
+    const_node_range_t subnodes = parentMap.equal_range( parentIds.front() );
+    node_id_deque_t subParentIds( parentIds );
+    subParentIds.push_front( node_id_t() );
+    for ( parent_map_t::const_iterator nIt = subnodes.first; nIt != subnodes.second; ++nIt ) {
+        node_map_t::iterator subNodeIt = nodeMap.find( nIt->second );
+        subNodeIt->second.parentIds = parentIds;
+        subParentIds.front() = nIt->second;
+        set_nodes_parents( subParentIds );
     }
 }
 
