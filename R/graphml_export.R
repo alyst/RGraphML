@@ -38,13 +38,13 @@
 #' @export
 GraphML.generate <- function(
     nodes, edges,
-    node_id.column = "id", parent_id.column = "NA",
+    node_id.column = "id", parent_id.column = NA,
     source.column = "source", target.column = "target",
     node.attrs = character(), edge.attrs = character(),
     is.directed = FALSE
 ){
     DataFrameToGraphML( nodes, edges,
-        nodeIdCol = node_id.column, parentIdCol = parent_id.column,
+        nodeIdCol = node_id.column, parentIdCol = as.character( parent_id.column ),
         sourceCol = source.column, targetCol = target.column,
         nodeAttrs = node.attrs, edgeAttrs = edge.attrs,
         isDirected = is.directed )

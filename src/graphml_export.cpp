@@ -462,13 +462,12 @@ void Graph::write_subgraph(
 //???
 //??? @param str input character vector
 //??? @return characters in each element of the vector
-//* @TODO: fix to use proper NA for parentIdCol
 // [[Rcpp::export]]
 std::string DataFrameToGraphML(
     const Rcpp::DataFrame&  nodes,
     const Rcpp::DataFrame&  edges,
     const std::string&      nodeIdCol = "id",
-    const std::string&      parentIdCol = "NA",
+    const Rcpp::String&     parentIdCol = NA_STRING,
     const std::string&      sourceCol = "source",
     const std::string&      targetCol = "target",
     const Rcpp::CharacterVector& nodeAttrs = Rcpp::CharacterVector::create(),
@@ -477,7 +476,7 @@ std::string DataFrameToGraphML(
 ){
     Rcpp::Rcerr << "Initializing GraphML export...\n";
     Graph graph( nodes, edges, nodeIdCol,
-                 parentIdCol == "NA" ? std::string() : parentIdCol,
+                 parentIdCol.get_sexp() != NA_STRING ? (std::string)parentIdCol : std::string(),
                  sourceCol, targetCol,
                  nodeAttrs, edgeAttrs,
                  isDirected );
