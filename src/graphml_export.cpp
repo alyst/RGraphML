@@ -3,7 +3,6 @@
 #include <map>
 #include <deque>
 #include <Rcpp.h>
-#include <Rcpp/iostream/Rostream.h>
 
 #ifndef NDEBUG
 //#define DYNLOAD_DEBUG
@@ -300,7 +299,7 @@ void Graph::read_nodes()
         Node node;
         node.id = nodeIds[ i ];
         node_id_t parentId;
-        if ( i < parentIds.size() && !(parentIds[i] == NA_STRING) ) parentId = parentIds[i];
+        if ( i < parentIds.size() && !Rcpp::traits::is_na<STRSXP>( parentIds[i] ) ) parentId = parentIds[i];
         node.rowIx = i;
         node_map_t::iterator nIt = nodeMap.find( node.id );
         if ( nIt == nodeMap.end() ) {

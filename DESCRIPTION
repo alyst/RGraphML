@@ -7,5 +7,5 @@ Author: Alexey Stukalov
 Maintainer: Alexey Stukalov <astukalov@cemm.oeaw.ac.at>
 Description: Converts graph defined by nodes and edges data.frame into GraphML format.
 License: BSD (TODO)
-Depends: Rcpp (>= 0.10.2)
+Depends: Rcpp (>= 0.11)
 LinkingTo: Rcpp
