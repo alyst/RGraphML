@@ -43,7 +43,7 @@ struct Attribute {
     ) : values( values )
       , id( id )
       , exportName( exportName )
-      , rtype( values.size() > 0 ? Rcpp::RObject( values[0] ).sexp_type() : NILSXP )
+      , rtype( r_vector_sxp_type( values ) )
       , isNodeAttr( isNodeAttr )
     {
     }

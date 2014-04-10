@@ -24,6 +24,11 @@ inline bool r_is_na( int rtype, Rcpp::GenericVector::const_Proxy value )
     }
 }
 
+inline int r_vector_sxp_type( const Rcpp::GenericVector& v )
+{
+	return ( v.size() > 0 ? Rcpp::RObject( v[0] ).sexp_type() : NILSXP );
+}
+
 typedef std::map<std::string, int> column_map_t;
 
 inline column_map_t column_names( const Rcpp::DataFrame& data )
