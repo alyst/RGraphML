@@ -174,7 +174,7 @@ attr_desc_map_t process_attributes(
                         is_composite = true;
                     }
 				} else {
-                    Rcpp::Rcerr << "Bad composite attribute format '" << exportName << "'\n";
+                    Rcpp::Rcerr << "Bad composite attribute name format '" << exportName << "'\n";
 				}
 			}
             if ( !is_composite ) {
@@ -309,20 +309,14 @@ struct CompositeDataContainer {
 	{
 		if ( attr.empty() ) return;
 
-		Rcpp::Rcerr << "Getting fields of attribute type " << attr.type << "\n";
 		const AttributeDescriptor::fields_t& fields = AttributeDescriptor::CompositeFields( attr.type );
 		if ( fields.size() != 3 ) {
 			THROW_EXCEPTION( std::runtime_error, "Expected 3 fields defined for composite type" );
 		}
-		Rcpp::Rcerr << "Getting column indices (" << fields.size() << ")\n";
 		for ( std::size_t i = 0; i < fields.size(); ++i ) {
         	int colIx;
-			Rcpp::Rcerr << "setting ";
-			Rcpp::Rcerr << fields[i].name << " to";
 			AttributeDescriptor::field_map_t::const_iterator fIt = attr.fields.find( fields[i].name );
-			Rcpp::Rcerr << " the";
 			colIx = fIt != attr.fields.end() ? fIt->second : -1;
-			Rcpp::Rcerr << " column " << colIx << "\n";
             if ( colIx >= 0 ) {
                 values.push_back( data[colIx] );
             } else if ( fields[i].required ){
@@ -422,7 +416,6 @@ attr_map_t create_attributes(
 	for ( attr_desc_map_t::const_iterator nIt = nodeAttrs.begin();
 		  nIt != nodeAttrs.end(); ++nIt
 	){
-		Rcpp::Rcerr << "Binding data to attribute " << nIt->first << "\n";
 		attr_desc_map_t::const_iterator eIt = edgeAttrs.find( nIt->first );
 		if ( eIt != edgeAttrs.end() ) {
 			if ( eIt->second.type != nIt->second.type ) {
@@ -444,7 +437,6 @@ attr_map_t create_attributes(
 	for ( attr_desc_map_t::const_iterator eIt = edgeAttrs.begin();
 		  eIt != edgeAttrs.end(); ++eIt
 	){
-    	Rcpp::Rcerr << "Binding data to attribute " << eIt->first << "\n";
 		attr_desc_map_t::const_iterator nIt = edgeAttrs.find( eIt->first );
 		if ( eIt == edgeAttrs.end() ) {
 			AttributeBase* newAttr = !eIt->second.is_composite
@@ -582,7 +574,7 @@ Graph::Graph(
     attr_desc_map_t nodeAttrsMap = process_attributes( nodes, nodeAttrsExported, true );
     Rcpp::Rcerr << "Reading edge attributes...\n";
     attr_desc_map_t edgeAttrsMap = process_attributes( edges, edgeAttrsExported, false );
-    Rcpp::Rcerr << "Joining attributes...\n";
+    Rcpp::Rcerr << "Binding attributes to data...\n";
     attrs = create_attributes( nodeAttrsMap, edgeAttrsMap, nodes, edges );
 }
 
@@ -762,24 +754,19 @@ void Graph::write_subgraph(
     const_node_range_t nodes = parentMap.equal_range( parentId );
     bool hasClusterBlock = parentId != ROOT_GRAPH_ID || !parentMap.empty();
     if ( nodes.first == nodes.second ) {
-        Rcpp::Rcerr << "skipping subgraph, no child nodes...\n";
         // no child nodes, exit
         return;
     }
     if ( hasClusterBlock ) {
-        Rcpp::Rcerr << "defining cluster " << parentId << "...\n";
+        //Rcpp::Rcerr << "defining cluster " << parentId << "...\n";
         out << "(cluster " << (parentId+1) << " \"" << parentId << "\"\n"
             << "  (nodes ";
-        //write_comment( out, "Nodes" );
-        Rcpp::Rcerr << "writing cluster nodes...\n";
         for ( parent_map_t::const_iterator nIt = nodes.first; nIt != nodes.second; ++nIt )
         {
             out << ' ' << nIt->second;
         }
         out << ")\n";
     
-        Rcpp::Rcerr << "writing cluster edges...\n";
-        //write_comment( out, "Edges" );
         const_edge_range_t edges = edgeParentMap.equal_range( parentId );
         if ( edges.first != edges.second ) {
             out << "  (edges";
@@ -792,7 +779,6 @@ void Graph::write_subgraph(
         }
         out << ")\n";
     }
-    Rcpp::Rcerr << "processing subgraphs...\n";
     // process subgraphs
     for ( parent_map_t::const_iterator nIt = nodes.first; nIt != nodes.second; ++nIt )
     {
