@@ -10,6 +10,8 @@
 //#define DYNLOAD_DEBUG
 #endif
 
+namespace GraphML {
+
 std::string r_to_graphml_type( int rtype )
 {
     switch ( rtype ) {
@@ -424,6 +426,8 @@ void Graph::write_subgraph(
     out << "</graph>\n";
 }
 
+}
+
 //??? The length of a string (in characters).
 //???
 //??? @param str input character vector
@@ -441,7 +445,7 @@ std::string DataFrameToGraphML(
     bool                    isDirected = false
 ){
     Rcpp::Rcerr << "Initializing GraphML export...\n";
-    Graph graph( nodes, edges, nodeIdCol,
+    GraphML::Graph graph( nodes, edges, nodeIdCol,
                  parentIdCol.get_sexp() != NA_STRING ? (std::string)parentIdCol : std::string(),
                  sourceCol, targetCol,
                  nodeAttrs, edgeAttrs,
