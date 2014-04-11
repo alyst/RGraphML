@@ -750,7 +750,7 @@ void Graph::write_subgraph(
     node_id_t                   parentId,
     child_map_t&                nodeToParent
 ) const {
-    Rcpp::Rcerr << "finding children of node " << parentId << "...\n";
+    //Rcpp::Rcerr << "finding children of node " << parentId << "...\n";
     const_node_range_t nodes = parentMap.equal_range( parentId );
     bool hasClusterBlock = parentId != ROOT_GRAPH_ID || !parentMap.empty();
     if ( nodes.first == nodes.second ) {
