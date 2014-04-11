@@ -437,8 +437,8 @@ attr_map_t create_attributes(
 	for ( attr_desc_map_t::const_iterator eIt = edgeAttrs.begin();
 		  eIt != edgeAttrs.end(); ++eIt
 	){
-		attr_desc_map_t::const_iterator nIt = edgeAttrs.find( eIt->first );
-		if ( eIt == edgeAttrs.end() ) {
+		attr_desc_map_t::const_iterator nIt = nodeAttrs.find( eIt->first );
+		if ( nIt == nodeAttrs.end() ) {
 			AttributeBase* newAttr = !eIt->second.is_composite
 			                   ? (AttributeBase*)new Attribute<SimpleDataContainer>( res.size()+1, eIt->first,
 													  AttributeDescriptor(), eIt->second,
