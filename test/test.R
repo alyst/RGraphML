@@ -22,6 +22,6 @@ tulip.txt <- tulip.generate( nodes.df, edges.df,
                                              `viewSize[w]` = 'width',
                                              `viewSize[h]` = 'height',
                                              'is_legal', 'counts' ),
-                             edge.attrs = c('weight','counts') )
+                             edge.attrs = c('weight','counts','target') )
 message(tulip.txt)
 write( tulip.txt, file = '~/test.tlp' )
