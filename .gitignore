@@ -1,8 +1,6 @@
 .Rproj.user
 .Rhistory
 .RData
-R/RcppExports.R
-src/RcppExports.cpp
 src/*.o
 src/*.so
 src/*.dll
